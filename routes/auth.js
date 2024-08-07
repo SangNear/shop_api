@@ -36,7 +36,7 @@ router.post("/login", async (req, res) => {
             return res.status(401).json("Password is not correct!")
         }
         const accessToken = jwt.sign({
-            id: user.id,
+            id: user._id,
             isAdmin: user.isAdmin,
         }, process.env.JWT_SEC,
             { expiresIn: "3d" }
