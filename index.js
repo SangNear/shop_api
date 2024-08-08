@@ -21,6 +21,8 @@ mongoose.connect(process.env.MONGO_URL)
     })
 
 
+
+
 app.use('/api/user', authRoute)
 app.use('/api/user', userRoute)
 app.use('/api/product', productRoute)

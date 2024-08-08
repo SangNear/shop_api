@@ -1,8 +1,9 @@
 const router = require('express').Router()
 const { verifyTokenAdmin } = require('./verifyToken')
 const Product = require("../models/Product")
-
-
+const multer = require("multer");
+const fs = require('fs');
+const path = require('path');
 //GET PRODUCT BY TITLE
 router.get("/:slug", async (req, res) => {
     try {
@@ -26,10 +27,24 @@ router.get('/', async (req, res) => {
 })
 
 
+
 // CREATE A PRODUCT
-router.post("/", verifyTokenAdmin, async (req, res) => {
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images');
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname + "_" + Date.now() + path.extname(file.originalname));
+    },
+});
+
+const upload = multer({ storage: storage });
+router.post("/", verifyTokenAdmin, upload.single("img"), async (req, res) => {
     try {
-        const { title, desc, img, categories, size, color, price } = req.body
+        const { title, desc, categories, size, color, price } = req.body
+        const img = req.file
+
         if (!title || !img || !categories) {
             return res.status(400).json("Title, image and category is not empty")
         }
@@ -37,15 +52,18 @@ router.post("/", verifyTokenAdmin, async (req, res) => {
         if (titleIsExists) {
             return res.status(500).json("Title is exists! Choose another one")
         }
+        
         const newProduct = await Product.create({
             title,
             desc,
-            img,
+            img: img.filename,
             categories,
             size,
             color,
             price,
         })
+        console.log("newProduct", newProduct);
+
         await newProduct.save()
 
         return res.status(200).json(newProduct)
