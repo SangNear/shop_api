@@ -2,7 +2,7 @@ const express = require('express');
 const { default: mongoose } = require('mongoose');
 const app = express();
 const dotenv = require('dotenv')
-
+const cors = require('cors')
 const authRoute = require('./routes/auth')
 const userRoute = require('./routes/user')
 const productRoute = require('./routes/product')
@@ -10,7 +10,7 @@ const productRoute = require('./routes/product')
 dotenv.config()
 app.use(express.json())
 
-
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL)
     .then(() => {

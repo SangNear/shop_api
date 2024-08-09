@@ -35,14 +35,16 @@ const storage = multer.diskStorage({
         cb(null, 'images');
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname + "_" + Date.now() + path.extname(file.originalname));
+        cb(null, Date.now() + path.extname(file.originalname));
     },
 });
+
 
 const upload = multer({ storage: storage });
 router.post("/", verifyTokenAdmin, upload.single("img"), async (req, res) => {
     try {
         const { title, desc, categories, size, color, price } = req.body
+
         const img = req.file
 
         if (!title || !img || !categories) {
@@ -52,11 +54,14 @@ router.post("/", verifyTokenAdmin, upload.single("img"), async (req, res) => {
         if (titleIsExists) {
             return res.status(500).json("Title is exists! Choose another one")
         }
-        
+        const imgPath = path.join(__dirname, '../images', img.filename);
+        const imgBase64 = fs.readFileSync(imgPath, { encoding: 'base64' });
+        const imgBase64URL = `data:image/${path.extname(img.filename).slice(1)};base64,${imgBase64}`;
+
         const newProduct = await Product.create({
             title,
             desc,
-            img: img.filename,
+            img: imgBase64URL,
             categories,
             size,
             color,
@@ -65,7 +70,7 @@ router.post("/", verifyTokenAdmin, upload.single("img"), async (req, res) => {
         console.log("newProduct", newProduct);
 
         await newProduct.save()
-
+        fs.unlinkSync(imgPath);
         return res.status(200).json(newProduct)
     } catch (error) {
         console.log(error)
